@@ -1,0 +1,6 @@
+### Rust ###
+# Ignore builds
+target/
+
+# Ignore Cargo.lock
+Cargo.lock
