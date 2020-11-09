@@ -5,7 +5,7 @@ There are many existing tools for managing dotfiles, so why make another? Primar
 # Building
 A GitHub Actions build should be available, but you may also build it yourself with `cargo build`.
 # Future Goals
-- [ ] Write a MAKEPKG
+- [x] Write a MAKEPKG
 - [ ] Write a better config file parser
 - [ ] Package installation
 - [ ] Templating
