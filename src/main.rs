@@ -1,5 +1,8 @@
+#[macro_use] extern crate log;
+
 use std::env;
 use std::process;
+use simplelog::*;
 
 mod import;
 mod export;
@@ -10,21 +13,31 @@ fn main() {
     let mut args = args.drain(..);
     let _progname = args.next().unwrap();
     let argslen = args.len();
-    println!("{:?}", args);
 
     let mut runmode = argmod::parsearg();
+
+    // Start logger
+    TermLogger::init(
+        runmode.verbosity,
+        Config::default(),
+        TerminalMode::Mixed,
+    ).unwrap();
+
+
+    debug!("Args: {:?}", args);
+    debug!("Runmode: {:?}", runmode);
 
     if argslen == 0 {
         runmode.help = true;
     }
-    println!("{:?}", runmode);
+
     if runmode.help {
         println!("{}", usage::get(&runmode));
     } else {
         match runmode.mode {
             argmod::Mode::Import => import::main(runmode),
             argmod::Mode::Export => export::main(runmode),
-            argmod::Mode::None => println!("Something went wrong..."),
+            argmod::Mode::None => error!("No mode specified"),
         }
     }
     process::exit(0);
@@ -72,6 +85,7 @@ mod argmod {
     use std::env;
     use std::process;
     use std::path::PathBuf;
+    use simplelog::LevelFilter;
 
     pub enum CMDarg {
         Import,
@@ -96,7 +110,7 @@ mod argmod {
         pub directory: PathBuf,
         pub git: bool,
         pub help: bool,
-        pub verbose: bool,
+        pub verbosity: LevelFilter,
     }
 
     impl Arguments {
@@ -107,7 +121,7 @@ mod argmod {
                 directory: PathBuf::new(),
                 git: false,
                 help: false,
-                verbose: false,
+                verbosity: LevelFilter::Info,
             };
         }
     }
@@ -157,22 +171,30 @@ mod argmod {
                         }
                     }
                 }
+                let mut vcount: i8 = 0;
                 for i in parseout {
                     match i {
                         self::CMDarg::Import => retmode.mode = self::Mode::Import,
                         self::CMDarg::Export => retmode.mode = self::Mode::Export,
                         self::CMDarg::Git => retmode.git = true,
                         self::CMDarg::Help => retmode.help = true,
-                        self::CMDarg::Verbose => retmode.verbose = true,
+                        self::CMDarg::Verbose => vcount += 1,
                         self::CMDarg::Error(s) => {
                             println!("Error: Failed to parse: {}", s);
                             process::exit(1)
                         }
                     }
                 }
+                match vcount {
+                    v if v <= -2 => retmode.verbosity = LevelFilter::Error,
+                    v if v == -1 => retmode.verbosity = LevelFilter::Warn,
+                    v if v == 0 => retmode.verbosity = LevelFilter::Info,
+                    v if v == 1 => retmode.verbosity = LevelFilter::Debug,
+                    v if v >= 2 => retmode.verbosity = LevelFilter::Trace,
+                    _ => panic!(),
+                }
             }
         }
-
         retmode
     }
 }

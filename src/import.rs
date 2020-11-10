@@ -1,7 +1,6 @@
 use crate::argmod;
 use std::process;
 use std::fs;
-use std::env;
 use std::path::PathBuf;
 use dirs;
 
@@ -17,19 +16,19 @@ pub fn main (mut args: argmod::Arguments) {
     if args.directory.is_dir() {
         ()
     } else if args.directory.exists() {
-        println!("Error: {:?} is not a directory.", args.directory);
+        error!("{:?} is not a directory.", args.directory);
         process::exit(1);
     } else {
         match fs::create_dir_all(args.directory.clone()) {
             Ok(_) => (),
             _ => {
-                println!("Error: Failed to create directory: {:?}", args.directory);
+                error!("Failed to create directory: {:?}", args.directory);
                 process::exit(1);
             }
         }
     }
     args.directory = args.directory.canonicalize().unwrap();
-    println!("Info: Directory = {:?}", args.directory);
+    info!("Directory = {:?}", args.directory);
 
     // Create Git repository
 
@@ -44,7 +43,7 @@ pub fn main (mut args: argmod::Arguments) {
     configfile.push("dotfiles.conf");
 
     let filelist = config::parse(configfile, dirs::home_dir().unwrap());
-    println!("Debug: filelist = {:?}", filelist);
+    debug!("filelist = {:?}", filelist);
 
     // Copy files over
 
@@ -53,12 +52,12 @@ pub fn main (mut args: argmod::Arguments) {
         let mut dest = file.strip_prefix(dirs::home_dir().unwrap().to_str().unwrap()).unwrap().to_path_buf();
         dest = PathBuf::from(args.directory.clone()).join(dest);
 
-        println!("Copying {:?}", file);
+        info!("Copying {:?}", file);
 
         match fs::create_dir_all(dest.parent().unwrap()) {
             Ok(_) => (),
             _ => {
-                println!("Error: Creating directory {:?} failed.", dest.parent().unwrap());
+                error!("Creating directory {:?} failed.", dest.parent().unwrap());
                 process::exit(1);
             }
         }
@@ -66,7 +65,7 @@ pub fn main (mut args: argmod::Arguments) {
         match fs::copy(src, dest) {
             Ok(_) => (),
             _ => {
-                println!("Error: Copying {:?} failed.", file);
+                error!("Copying {:?} failed.", file);
                 process::exit(1);
             }
         }
@@ -74,8 +73,8 @@ pub fn main (mut args: argmod::Arguments) {
 
     // Commit to Git repository
 
-    println!("current dir = {:?}", env::current_dir().unwrap());
-    println!("relative repo dir = {:?}", args.directory.strip_prefix(env::current_dir().unwrap()).unwrap().to_path_buf());
-
-    git::commitall(&args.directory).expect("Warn: Couldn't commit to repo.");
+    match git::commitall(&args.directory) {
+        Ok(_) => info!("Commited to Git repo."),
+        _ => warn!("No Git repo to commit to."),
+    }
 }
