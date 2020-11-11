@@ -4,10 +4,15 @@ use std::env;
 use std::process;
 use simplelog::*;
 
+#[path = "parser.rs"]
+mod parser;
+
 mod import;
 mod export;
 
 fn main() {
+    parser::main();
+    process::exit(1);
     let args: Vec<String> = env::args().collect();
     let mut args = args.clone();
     let mut args = args.drain(..);
