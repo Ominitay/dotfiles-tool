@@ -4,3 +4,8 @@ target/
 
 # Ignore Cargo.lock
 Cargo.lock
+
+### Makepkg ###
+# Ignore packages
+*.pkg.tar.*
+pkg/
