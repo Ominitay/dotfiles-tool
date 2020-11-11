@@ -3,6 +3,8 @@ use std::process;
 use std::fs;
 use std::path::PathBuf;
 use dirs;
+use flate2::Compression;
+use flate2::write::GzEncoder;
 
 #[path = "config.rs"]
 mod config;
@@ -77,4 +79,23 @@ pub fn main (mut args: argmod::Arguments) {
         Ok(_) => info!("Commited to Git repo."),
         _ => warn!("No Git repo to commit to."),
     }
+
+    let mut tardir = args.directory.clone();
+    tardir.set_extension("tar.gz");
+    info!("Tar path = {:?}", tardir);
+
+    // Make tar.gz archive
+
+    if args.tar {
+        archive(&mut args.directory);
+    }
+}
+
+fn archive(path: &mut PathBuf) {
+    let mut tarpath = path.clone();
+    tarpath.set_extension("tar.gz");
+    let tar_gz = fs::File::create(&tarpath).unwrap();
+    let enc = GzEncoder::new(tar_gz, Compression::default());
+    let mut tar = tar::Builder::new(enc);
+    tar.append_dir_all("dotfiles", &path).unwrap();
 }

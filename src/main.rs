@@ -62,6 +62,7 @@ mod usage {
 import | Copy dotfiles listed in $configfile from the system to a directory.
 export | Copy all dotfiles from a directory to the system.
 
+-a   | Create a tar archive compressed with gzip.
 -g   | Initialise a Git repository in the directory, if one doesn't already exist.
 -h/? | Output a help page.
 -v   | Enable verbose output.",
@@ -93,6 +94,7 @@ mod argmod {
         Git,
         Help,
         Verbose,
+        Tar,
         Error(String),
     }
 
@@ -111,6 +113,7 @@ mod argmod {
         pub git: bool,
         pub help: bool,
         pub verbosity: LevelFilter,
+        pub tar: bool,
     }
 
     impl Arguments {
@@ -122,6 +125,7 @@ mod argmod {
                 git: false,
                 help: false,
                 verbosity: LevelFilter::Info,
+                tar: false,
             };
         }
     }
@@ -154,6 +158,7 @@ mod argmod {
                             for i in argdrain {
                                 if i != '-' {
                                     match i {
+                                        'a' => parseout.push(self::CMDarg::Tar),
                                         'g' => parseout.push(self::CMDarg::Git),
                                         'h' => parseout.push(self::CMDarg::Help),
                                         'v' => parseout.push(self::CMDarg::Verbose),
@@ -179,6 +184,7 @@ mod argmod {
                         self::CMDarg::Git => retmode.git = true,
                         self::CMDarg::Help => retmode.help = true,
                         self::CMDarg::Verbose => vcount += 1,
+                        self::CMDarg::Tar => retmode.tar = true,
                         self::CMDarg::Error(s) => {
                             println!("Error: Failed to parse: {}", s);
                             process::exit(1)

@@ -12,4 +12,4 @@ A GitHub Actions build should be available, but you may also build it yourself w
 - [ ] Symlink creation
 - [ ] External program/script execution
 - [ ] GPG encryption
-- [ ] Archive creation
+- [x] Archive creation
